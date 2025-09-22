@@ -1,0 +1,91 @@
+{% extends '/azure/base.html' %}
+
+{% block title %}Index Page{% endblock %}
+
+{% block content %}
+
+<section class="content">
+    <div class="row">
+        <div class="col-md-6">
+            <div class="box box-primary">
+                <div class="box-header with-border">
+                    <h3 class="box-title">Agent List</h3>
+                </div>
+                <form role="form" id="aif_agent_list_form">
+                    <div class="box-body">
+                        <label for="project_endpoint">Project Endpoint</label>
+                        <input type="text" class="form-control" id="project_endpoint" placeholder="Enter Project Endpoint">
+                    </div>
+                    <div class="box-footer">
+                        <button type="submit" class="btn btn-primary">Submit</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row" style="margin-top: 20px;">
+        <div class="col-md-12">
+            <div class="box box-success" id="resultBox" style="display: none;">
+                <div class="box-header with-border">
+                    <h3 class="box-title">결과</h3>
+                </div>
+                <div class="box-body">
+                    <pre id="resultMessage"></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const aif_agent_list_form = document.getElementById('aif_agent_list_form');
+    const resultBox = document.getElementById('resultBox');
+    const resultMessage = document.getElementById('resultMessage');
+
+    aif_agent_list_form.addEventListener('submit', async function(event) {
+        event.preventDefault(); // 기본 폼 제출 동작 방지
+
+        const project_endpoint = document.getElementById('project_endpoint').value;
+        if (!project_endpoint) {
+            alert('Project Endpoint를 입력해주세요.');
+            return;
+        }
+
+        resultMessage.textContent = '처리 중...';
+        resultBox.style.display = 'block';
+
+        try {
+            const response = await fetch('/AIFoundry/agent_list', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ 
+                    project_endpoint: project_endpoint,
+                 })
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                resultMessage.textContent = result.message;
+                resultBox.classList.remove('box-danger');
+                resultBox.classList.add('box-success');
+            } else {
+                resultMessage.textContent = result.message || '알 수 없는 오류가 발생했습니다.';
+                resultBox.classList.remove('box-success');
+                resultBox.classList.add('box-danger');
+            }
+
+        } catch (error) {
+            console.error('Fetch Error:', error);
+            resultMessage.textContent = `오류가 발생했습니다: ${error.message}`;
+            resultBox.classList.remove('box-success');
+            resultBox.classList.add('box-danger');
+        }
+    });
+});
+</script>
+{% endblock %}

@@ -79,7 +79,7 @@ document.addEventListener('DOMContentLoaded', function() {
         resultBox.style.display = 'block';
 
         try {
-            const response = await fetch('/StorageAccount/accesskey', {
+            const response = await fetch('/ApplicationInsights/connectionTest', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'

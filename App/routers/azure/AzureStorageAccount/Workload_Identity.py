@@ -2,7 +2,7 @@ from fastapi import FastAPI, Request, APIRouter
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from fastapi import APIRouter
-
+from pydantic import BaseModel
 import os, uuid
 from azure.identity import DefaultAzureCredential
 from azure.storage.blob import BlobServiceClient, ContainerClient
@@ -10,15 +10,19 @@ from azure.storage.blob import BlobServiceClient, ContainerClient
 templates = Jinja2Templates(directory="templates")
 router = APIRouter()
 
+# Pydantic 모델로 요청 본문 데이터 정의
+class AzureStorageAccount_INFO(BaseModel):
+    account_url: str
+
 # Ajax 요청을 받을 API 엔드포인트
 @router.post("/StorageAccount/workloadIdentity")
-def workload_identity():
+def workload_identity(data: AzureStorageAccount_INFO):
     result_message = ""
     try:
         print("Azure Blob Storage Python quickstart sample")
         result_message += "Azure Blob Storage Python quickstart sample" + "\n"
-        # Azure Storage 계정 URL
-        account_url = "https://apdevaistaibiz.blob.core.windows.net"
+        # account_url = "https://apdevaistaibiz.blob.core.windows.net"
+        account_url = data.account_url
         default_credential = DefaultAzureCredential()
 
         # BlobServiceClient 생성

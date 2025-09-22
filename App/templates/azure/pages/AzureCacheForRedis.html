@@ -14,8 +14,14 @@
                 <form role="form" id="accessKeyForm">
                     <div class="box-body">
                         <div class="form-group">
-                            <label for="connectionString">Connection String</label>
-                            <input type="text" class="form-control" id="connectionString" placeholder="Enter connection string">
+                            <label for="redis_host">REDIS HOST</label>
+                            <input type="text" class="form-control" id="redis_host" placeholder="Enter Redis Host">
+                            <label for="redis_host">REDIS PORT</label>
+                            <input type="text" class="form-control" id="redis_port" placeholder="Enter Redis Port">
+                            <label for="redis_host">REDIS USERNAME</label>
+                            <input type="text" class="form-control" id="redis_username" placeholder="Enter Redis User name">
+                            <label for="redis_host">REDIS PASSWORD</label>
+                            <input type="text" class="form-control" id="redis_password" placeholder="Enter Redis Password">
                         </div>
                     </div>
                     <div class="box-footer">
@@ -32,7 +38,11 @@
                 </div>
                 <form role="form" id="workload-IdentityForm">
                     <div class="box-body">
-                        </div>
+                        <label for="redis_host">REDIS HOST</label>
+                        <input type="text" class="form-control" id="redis_host_wi" placeholder="Enter Redis HOST">
+                        <label for="redis_port">REDIS PORT</label>
+                        <input type="text" class="form-control" id="redis_port_wi" placeholder="Enter Redis PORT">
+                    </div>
                     <div class="box-footer">
                         <button type="submit" class="btn btn-primary">Submit</button>
                     </div>
@@ -65,9 +75,24 @@ document.addEventListener('DOMContentLoaded', function() {
     accessKeyForm.addEventListener('submit', async function(event) {
         event.preventDefault(); // 기본 폼 제출 동작 방지
 
-        const connectionString = document.getElementById('connectionString').value;
-        if (!connectionString) {
-            alert('Connection String을 입력해주세요.');
+        const redis_host = document.getElementById('redis_host').value;
+        if (!redis_host) {
+            alert('redis_host을 입력해주세요.');
+            return;
+        }
+        const redis_port = document.getElementById('redis_port').value;
+        if (!redis_port) {
+            alert('redis_port을 입력해주세요.');
+            return;
+        }
+        const redis_username = document.getElementById('redis_username').value;
+        if (!redis_username) {
+            alert('redis_username을 입력해주세요.');
+            return;
+        }
+        const redis_password = document.getElementById('redis_password').value;
+        if (!redis_password) {
+            alert('redis_password을 입력해주세요.');
             return;
         }
 
@@ -75,12 +100,17 @@ document.addEventListener('DOMContentLoaded', function() {
         resultBox.style.display = 'block';
 
         try {
-            const response = await fetch('/accesskey_st', {
+            const response = await fetch('/Redis/accesskey', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ connection_string: connectionString })
+                body: JSON.stringify({ 
+                    redis_host: redis_host,
+                    redis_port: redis_port,
+                    redis_username: redis_username,
+                    redis_password: redis_password,
+                 })
             });
 
             const result = await response.json();
@@ -102,12 +132,19 @@ document.addEventListener('DOMContentLoaded', function() {
             resultBox.classList.add('box-danger');
         }
     });
+
+
     workload_IdentityForm.addEventListener('submit', async function(event) {
         event.preventDefault(); // 기본 폼 제출 동작 방지
 
-        const connectionString = document.getElementById('connectionString').value;
-        if (!connectionString) {
-            alert('Connection String을 입력해주세요.');
+        const redis_host = document.getElementById('redis_host_wi').value;
+        if (!redis_host) {
+            alert('redis_host을 입력해주세요.');
+            return;
+        }
+        const redis_port = document.getElementById('redis_port_wi').value;
+        if (!redis_port) {
+            alert('redis_port을 입력해주세요.');
             return;
         }
 
@@ -115,12 +152,15 @@ document.addEventListener('DOMContentLoaded', function() {
         resultBox.style.display = 'block';
 
         try {
-            const response = await fetch('/workloadIdentity_st', {
+            const response = await fetch('/Redis/workloadIdentity', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ connection_string: connectionString })
+                body: JSON.stringify({ 
+                    redis_host: redis_host,
+                    redis_port: redis_port
+                 })
             });
 
             const result = await response.json();

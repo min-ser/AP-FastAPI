@@ -9,13 +9,13 @@
         <div class="col-md-6">
             <div class="box box-primary">
                 <div class="box-header with-border">
-                    <h3 class="box-title">Access Key</h3>
+                    <h3 class="box-title">Ping Test</h3>
                 </div>
                 <form role="form" id="accessKeyForm">
                     <div class="box-body">
                         <div class="form-group">
-                            <label for="connectionString">Connection String</label>
-                            <input type="text" class="form-control" id="connectionString" placeholder="Enter connection string">
+                            <label for="ping_dns">DNS</label>
+                            <input type="text" class="form-control" id="ping_dns" placeholder="Enter connection string">
                         </div>
                     </div>
                     <div class="box-footer">
@@ -28,13 +28,13 @@
         <div class="col-md-6">
             <div class="box box-primary">
                 <div class="box-header with-border">
-                    <h3 class="box-title">Workload Identity</h3>
+                    <h3 class="box-title">nslookup Test</h3>
                 </div>
                 <form role="form" id="workload-IdentityForm">
                     <div class="box-body">
                         <div class="form-group">
-                            <label for="account_url">Account URL</label>
-                            <input type="text" class="form-control" id="account_url" placeholder="Enter Account url">
+                            <label for="nslookup_dns">DNS</label>
+                            <input type="text" class="form-control" id="nslookup_dns" placeholder="Enter Account url">
                         </div>
                     </div>
                     <div class="box-footer">
@@ -69,8 +69,8 @@ document.addEventListener('DOMContentLoaded', function() {
     accessKeyForm.addEventListener('submit', async function(event) {
         event.preventDefault(); // 기본 폼 제출 동작 방지
 
-        const connectionString = document.getElementById('connectionString').value;
-        if (!connectionString) {
+        const ping_dns = document.getElementById('ping_dns').value;
+        if (!ping_dns) {
             alert('Connection String을 입력해주세요.');
             return;
         }
@@ -79,12 +79,12 @@ document.addEventListener('DOMContentLoaded', function() {
         resultBox.style.display = 'block';
 
         try {
-            const response = await fetch('/StorageAccount/accesskey', {
+            const response = await fetch('/NetworkConnection/ping', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ connection_string: connectionString })
+                body: JSON.stringify({ dns: ping_dns })
             });
 
             const result = await response.json();
@@ -109,8 +109,8 @@ document.addEventListener('DOMContentLoaded', function() {
     workload_IdentityForm.addEventListener('submit', async function(event) {
         event.preventDefault(); // 기본 폼 제출 동작 방지
 
-        const account_url = document.getElementById('account_url').value;
-        if (!account_url) {
+        const nslookup_dns = document.getElementById('nslookup_dns').value;
+        if (!nslookup_dns) {
             alert('Connection String을 입력해주세요.');
             return;
         }
@@ -119,12 +119,12 @@ document.addEventListener('DOMContentLoaded', function() {
         resultBox.style.display = 'block';
 
         try {
-            const response = await fetch('/StorageAccount/workloadIdentity', {
+            const response = await fetch('/NetworkConnection/nslookup', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ account_url: account_url })
+                body: JSON.stringify({ dns: nslookup_dns })
             });
 
             const result = await response.json();
