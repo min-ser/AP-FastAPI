@@ -1,0 +1,378 @@
+{% extends '/azure/base.html' %}
+
+{% block title %}Index Page{% endblock %}
+
+{% block content %}
+
+<section class="content">
+    <div class="row">
+        <div class="col-md-6">
+            <!--
+            <div class="box box-primary">
+                <div class="box-header with-border">
+                    <h3 class="box-title">AI Search Get Index List</h3>
+                </div>
+                <form role="form" id="aisearch_AK_IndexList_Form">
+                    <div class="box-body">
+                        <div class="form-group">
+                            <label for="redis_host">AI Search Endpoint</label>
+                            <input type="text" class="form-control" id="aisearch_endpoint_ak" placeholder="Endpoint">
+                            <label for="redis_host">AI Search Key</label>
+                            <input type="text" class="form-control" id="aisearch_key_ak" placeholder="key">
+                            <label for="redis_host">AI Search index name</label>
+                            <input type="text" class="form-control" id="aisearch_index_name_ak" placeholder="index name">
+                        </div>
+                    </div>
+                    <div class="box-footer">
+                        <button type="submit" class="btn btn-primary">Get Index List</button>
+                    </div>
+                </form>
+            </div>-->
+            <div class="box box-primary">
+                <div class="box-header with-border">
+                    <h3 class="box-title">[Access Key] Index CRUD</h3>
+                </div>
+                <form role="form" id="aisearch_Index_AccessKey_Form" method="POST">
+                    <div class="box-body">
+                        <div class="form-group">
+                            <label for="aisearch_endpoint_ak">AI Search Endpoint</label>
+                            <input type="text" class="form-control" id="aisearch_endpoint_ak" name="aisearch_endpoint" placeholder="Endpoint" required>
+                            
+                            <label for="aisearch_key_ak">AI Search Key</label>
+                            <input type="password" class="form-control" id="aisearch_key_ak" name="aisearch_key" placeholder="Key" required>
+                            
+                            <label for="aisearch_index_name_ak">AI Search Index Name</label>
+                            <input type="text" class="form-control" id="aisearch_index_name_ak" name="aisearch_index_name" placeholder="Index Name">
+                            
+                            <label for="aisearch_index_config_ak">Index Configuration (e.g., JSON schema)</label>
+                            <textarea class="form-control" id="aisearch_index_config_ak" name="aisearch_index_config_ak" placeholder="Index configuration data (e.g., field definitions)"></textarea>
+                        </div>
+                    </div>
+                    
+                    <div class="box-footer">
+                        <div style="display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap;">
+                            <button type="submit" value="read" class="btn btn-info" style="flex-grow: 1;">🔍 인덱스 정보 읽기 (Read)</button>
+                            <button type="submit" value="create" class="btn btn-success" style="flex-grow: 1;">➕ 인덱스 생성 (Create)</button>
+                            <button type="submit" value="update" class="btn btn-warning" style="flex-grow: 1;">🛠️ 인덱스 수정 (Update)</button>
+                            <button type="submit" value="delete" class="btn btn-danger" style="flex-grow: 1;">🗑️ 인덱스 삭제 (Delete)</button>
+                        </div>
+                        
+                        <button type="submit" value="list" class="btn btn-primary btn-block">📋 인덱스 리스트 출력 (List All)</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+
+        <div class="col-md-6">
+            <div class="box box-primary">
+                <div class="box-header with-border">
+                    <h3 class="box-title">[Workload Identity] Index CRUD</h3>
+                </div>
+                <form role="form" id="aisearch_Index_WorkloadIdentity_Form" method="POST">
+                    <div class="box-body">
+                        <div class="form-group">
+                            <label for="aisearch_endpoint_wi">AI Search Endpoint</label>
+                            <input type="text" class="form-control" id="aisearch_endpoint_wi" name="aisearch_endpoint" placeholder="Endpoint" required>
+                            
+                            <label for="aisearch_key_ak">AI Search Key</label>
+                            <input type="password" class="form-control" id="aisearch_key_wi" name="aisearch_key" placeholder="Key" disabled>
+                            
+                            <label for="aisearch_index_name_wi">AI Search Index Name</label>
+                            <input type="text" class="form-control" id="aisearch_index_name_wi" name="aisearch_index_name" placeholder="Index Name">
+                            
+                            <label for="aisearch_index_config_ak">Index Configuration (e.g., JSON schema)</label>
+                            <textarea class="form-control" id="aisearch_index_config_wi" name="aisearch_index_config_ak" placeholder="Index configuration data (e.g., field definitions)"></textarea>
+                        </div>
+                    </div>
+                    
+                    <div class="box-footer">
+                        <div style="display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap;">
+                            <button type="submit" value="read" class="btn btn-info" style="flex-grow: 1;">🔍 인덱스 정보 읽기 (Read)</button>
+                            <button type="submit" value="create" class="btn btn-success" style="flex-grow: 1;">➕ 인덱스 생성 (Create)</button>
+                            <button type="submit" value="update" class="btn btn-warning" style="flex-grow: 1;">🛠️ 인덱스 수정 (Update)</button>
+                            <button type="submit" value="delete" class="btn btn-danger" style="flex-grow: 1;">🗑️ 인덱스 삭제 (Delete)</button>
+                        </div>
+                        
+                        <button type="submit" value="list" class="btn btn-primary btn-block">📋 인덱스 리스트 출력 (List All)</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+    </div>
+    
+    <div class="row" style="margin-top: 20px;">
+        <div class="col-md-12">
+            <div class="box box-success" id="resultBox" style="display: none;">
+                <div class="box-header with-border">
+                    <h3 class="box-title">결과</h3>
+                </div>
+                <div class="box-body">
+                    <pre id="resultMessage"></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Form Tag
+    const aisearch_Index_AccessKey_Form         = document.getElementById('aisearch_Index_AccessKey_Form');
+    const aisearch_Index_WorkloadIdentity_Form  = document.getElementById('aisearch_Index_WorkloadIdentity_Form');
+    
+    // Result Box
+    const resultBox = document.getElementById('resultBox');
+    const resultMessage = document.getElementById('resultMessage');
+
+    // AccessKey 방식 Ajax 전송
+    aisearch_Index_AccessKey_Form.addEventListener('submit', async function(event) {
+        event.preventDefault(); // 기본 폼 제출 동작 방지
+
+        // 1. 클릭된 버튼의 action 값 가져오기
+        const submitter = event.submitter;
+        const actionType = submitter ? submitter.value : null;
+
+        if (!actionType) {
+            alert('수행할 작업(Action)을 찾을 수 없습니다.');
+            return;
+        }
+
+        // 2. 필수 입력 필드 값 가져오기
+        const aisearch_endpoint_ak = document.getElementById('aisearch_endpoint_ak').value;
+        const aisearch_key_ak = document.getElementById('aisearch_key_ak').value;
+        const aisearch_index_name_ak = document.getElementById('aisearch_index_name_ak').value;
+        const aisearch_index_config_ak = document.getElementById('aisearch_index_config_ak').value;
+
+        // 3. 필수 파라미터 유효성 검사
+        if (!aisearch_endpoint_ak) {
+            alert('AI Search Endpoint를 입력해주세요.');
+            return;
+        }
+        if (!aisearch_key_ak) {
+            alert('AI Search Key를 입력해주세요.');
+            return;
+        }
+
+        // List 기능 외에는 index name이 필수
+        if (actionType !== 'list' && !aisearch_index_name_ak) {
+            alert('AI Search Index Name을 입력해주세요. (List 기능 제외)');
+            return;
+        }
+        
+        // Create/Update 기능에는 Index Configuration이 필수 (JSON 유효성 검사 필요)
+        if ((actionType === 'create' || actionType === 'update') && !aisearch_index_config_ak) {
+            alert('Index Configuration (JSON Schema)을 입력해주세요.');
+            return;
+        }
+
+        // 4. API 경로 및 Body 구성
+        let apiPath;
+        let requestBody = {
+            aisearch_endpoint: aisearch_endpoint_ak,
+            aisearch_key: aisearch_key_ak,
+            // index_name과 config는 모든 action에 포함하지만, 백엔드에서 필요한 경우에만 사용
+            aisearch_index_name: aisearch_index_name_ak, 
+            aisearch_index_config: aisearch_index_config_ak 
+        };
+
+        // 요청하는 기능에 따라 API 경로를 설정
+        switch (actionType) {
+            case 'list':
+                apiPath = '/AISearch/AK/index/list';
+                // List는 index name과 config가 필수가 아니므로 body에서 제거
+                delete requestBody.aisearch_index_name; 
+                delete requestBody.aisearch_index_config;
+                break;
+            case 'read':
+                apiPath = '/AISearch/AK/index/read';
+                break;
+            case 'create':
+                apiPath = '/AISearch/AK/index/create';
+                break;
+            case 'update':
+                apiPath = '/AISearch/AK/index/update';
+                break;
+            case 'delete':
+                apiPath = '/AISearch/AK/index/delete';
+                // Delete는 config가 필수가 아니므로 body에서 제거
+                delete requestBody.aisearch_index_config;
+                break;
+            default:
+                alert('유효하지 않은 Action Type입니다.');
+                return;
+        }
+
+        // 5. AJAX 요청 및 결과 처리
+        if (resultMessage) resultMessage.textContent = `${actionType.toUpperCase()} 처리 중...`;
+        if (resultBox) resultBox.style.display = 'block';
+
+        try {
+            const response = await fetch(apiPath, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(requestBody)
+            });
+
+            const result = await response.json();
+
+            // 결과 표시 로직 (resultMessage, resultBox가 HTML에 존재한다고 가정)
+            if (response.ok) {
+                if (resultMessage) resultMessage.textContent = `[${actionType.toUpperCase()}] 성공: ${result.message}`;
+                if (resultBox) {
+                    resultBox.classList.remove('box-danger');
+                    resultBox.classList.add('box-success');
+                }
+                
+                // List 기능의 경우, 인덱스 목록을 별도로 표시하는 로직 추가 가능
+                if (actionType === 'list' && result.data) {
+                    // 예시: 인덱스 목록을 콘솔에 출력
+                    console.log('Index List:', result.data);
+                    // 실제로는 화면의 특정 영역에 표시해야 합니다.
+                }
+
+            } else {
+                if (resultMessage) resultMessage.textContent = `[${actionType.toUpperCase()}] 실패: ${result.message || '알 수 없는 오류가 발생했습니다.'}`;
+                if (resultBox) {
+                    resultBox.classList.remove('box-success');
+                    resultBox.classList.add('box-danger');
+                }
+            }
+
+        } catch (error) {
+            console.error('Fetch Error:', error);
+            if (resultMessage) resultMessage.textContent = `오류가 발생했습니다: ${error.message}`;
+            if (resultBox) {
+                resultBox.classList.remove('box-success');
+                resultBox.classList.add('box-danger');
+            }
+        }
+    });// The end of Access Key
+    
+    // WorkloadIdentity 방식 Ajax 전송
+    aisearch_Index_WorkloadIdentity_Form.addEventListener('submit', async function(event) {
+        event.preventDefault(); // 기본 폼 제출 동작 방지
+
+        // 1. 클릭된 버튼의 action 값 가져오기
+        const submitter = event.submitter;
+        const actionType = submitter ? submitter.value : null;
+
+        if (!actionType) {
+            alert('수행할 작업(Action)을 찾을 수 없습니다.');
+            return;
+        }
+
+        // 2. 필수 입력 필드 값 가져오기
+        const aisearch_endpoint_wi      = document.getElementById('aisearch_endpoint_wi').value;
+        const aisearch_index_name_wi    = document.getElementById('aisearch_index_name_wi').value;
+        const aisearch_index_config_wi  = document.getElementById('aisearch_index_config_wi').value;
+
+        // 3. 필수 파라미터 유효성 검사
+        if (!aisearch_endpoint_wi) {
+            alert('AI Search Endpoint를 입력해주세요.');
+            return;
+        }
+
+        // List 기능 외에는 index name이 필수
+        if (actionType !== 'list' && !aisearch_index_name_wi) {
+            alert('AI Search Index Name을 입력해주세요. (List 기능 제외)');
+            return;
+        }
+        
+        // Create/Update 기능에는 Index Configuration이 필수 (JSON 유효성 검사 필요)
+        if ((actionType === 'create' || actionType === 'update') && !aisearch_index_config_wi) {
+            alert('Index Configuration (JSON Schema)을 입력해주세요.');
+            return;
+        }
+
+        // 4. API 경로 및 Body 구성
+        let apiPath;
+        let requestBody = {
+            aisearch_endpoint: aisearch_endpoint_wi,
+            // aisearch_key_wi: aisearch_key_wi,
+            aisearch_index_name: aisearch_index_name_wi, 
+            aisearch_index_config: aisearch_index_config_wi
+        };
+
+        // 요청하는 기능에 따라 API 경로를 설정
+        switch (actionType) {
+            case 'list':
+                apiPath = '/AISearch/WI/index/list';
+                // List는 index name과 config가 필수가 아니므로 body에서 제거
+                delete requestBody.aisearch_index_name_wi; 
+                delete requestBody.aisearch_index_config_wi;
+                break;
+            case 'read':
+                apiPath = '/AISearch/WI/index/read';
+                break;
+            case 'create':
+                apiPath = '/AISearch/WI/index/create';
+                break;
+            case 'update':
+                apiPath = '/AISearch/WI/index/update';
+                break;
+            case 'delete':
+                apiPath = '/AISearch/WI/index/delete';
+                // Delete는 config가 필수가 아니므로 body에서 제거
+                delete requestBody.aisearch_index_config_ak;
+                break;
+            default:
+                alert('유효하지 않은 Action Type입니다.');
+                return;
+        }
+
+        // 5. AJAX 요청 및 결과 처리
+        if (resultMessage) resultMessage.textContent = `${actionType.toUpperCase()} 처리 중...`;
+        if (resultBox) resultBox.style.display = 'block';
+
+        try {
+            const response = await fetch(apiPath, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(requestBody)
+            });
+
+            const result = await response.json();
+
+            // 결과 표시 로직 (resultMessage, resultBox가 HTML에 존재한다고 가정)
+            if (response.ok) {
+                if (resultMessage) resultMessage.textContent = `[${actionType.toUpperCase()}] 성공: ${result.message}`;
+                if (resultBox) {
+                    resultBox.classList.remove('box-danger');
+                    resultBox.classList.add('box-success');
+                }
+                
+                // List 기능의 경우, 인덱스 목록을 별도로 표시하는 로직 추가 가능
+                if (actionType === 'list' && result.data) {
+                    // 예시: 인덱스 목록을 콘솔에 출력
+                    console.log('Index List:', result.data);
+                    // 실제로는 화면의 특정 영역에 표시해야 합니다.
+                }
+
+            } else {
+                if (resultMessage) resultMessage.textContent = `[${actionType.toUpperCase()}] 실패: ${result.message || '알 수 없는 오류가 발생했습니다.'}`;
+                if (resultBox) {
+                    resultBox.classList.remove('box-success');
+                    resultBox.classList.add('box-danger');
+                }
+            }
+
+        } catch (error) {
+            console.error('Fetch Error:', error);
+            if (resultMessage) resultMessage.textContent = `오류가 발생했습니다: ${error.message}`;
+            if (resultBox) {
+                resultBox.classList.remove('box-success');
+                resultBox.classList.add('box-danger');
+            }
+        }
+    });// The end of Access Key
+
+    
+});
+</script>
+{% endblock %}

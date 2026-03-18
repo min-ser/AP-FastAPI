@@ -1,0 +1,351 @@
+{% extends '/azure/base.html' %}
+
+{% block title %}Azure Resource Naming Generator{% endblock %}
+
+{% block content %}
+<section class="content">
+    <div class="row">
+        <div class="col-md-8">
+            <div class="box box-primary">
+                <div class="box-header with-border">
+                    <h3 class="box-title">Azure 리소스 명칭 자동 생성기</h3>
+                </div>
+                <form role="form" id="resource_naming_form">
+                    <div class="box-body">
+                        <div class="form-group">
+                            <label>환경 (Environment)</label>
+                            <select class="form-control" id="env" required>
+                                <option value="dev">개발 (DEV)</option>
+                                <option value="stg">스테이징 (STG)</option>
+                                <option value="prd">운영 (PRD)</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>리소스 유형 검색 (Resource Type Search)</label>
+                            <input type="text" class="form-control" id="resource_search" placeholder="검색어 입력 (예: sql, ai, network...)">
+                            <!-- <select class="form-control" id="resource_type" required> -->
+                            <select class="form-control" id="resource_type" size="8" style="margin-top: 10px;" required>
+                                <optgroup label="제3조 1항: 기본 리소스 (환경-유형-서비스)">
+                                    <option value="ais">AI Search (ais)</option>
+                                    <option value="oai">Azure OpenAI (oai)</option>
+                                    <option value="docint">Document Intelligence (docint)</option>
+                                    <option value="redis">Redis (redis/db)</option>
+                                    <option value="psql">PostgreSQL (psql)</option>
+                                    <option value="mysql">MySQL (mysql)</option>
+                                    <option value="sqlmi">SQL Managed Instance (sqlmi)</option>
+                                    <!-- <option value="vnet">Virtual Network (vnet)</option> -->
+                                    <!-- <option value="snet">Subnet (snet)</option> -->
+                                    <!-- <option value="nsg">Network Security Group (nsg)</option> -->
+                                    <option value="pip">Public IP (pip)</option>
+                                    <option value="waf">WAF (waf)</option>
+                                    <option value="kv">Key Vault (kv)</option>
+                                    <option value="app">App Service (app)</option>
+                                    <option value="plan">App Service Plan (plan)</option>
+                                </optgroup>
+
+                                <optgroup label="제3조 2항: 예외적 구조 (환경-서비스-유형)">
+                                    <option value="rg">Resource Group (rg)</option>
+                                    <!-- <option value="subsc">Subscription (subsc)</option> -->
+                                </optgroup>
+
+                                <optgroup label="제3조 3항: 하이픈 미사용 (환경유형서비스)">
+                                    <option value="sa">Storage Account (sa)</option>
+                                </optgroup>
+
+                                <optgroup label="제3조 4항: AI Foundry (환경-서비스)">
+                                    <option value="aif">AI Foundry (aif)</option>
+                                    <!-- <option value="mlw">Machine Learning Workspace (mlw)</option> -->
+                                </optgroup>
+
+                                <optgroup label="제3조 5항: Private Endpoint (전체 대문자)">
+                                    <option value="pep">Private Endpoint (pep)</option>
+                                </optgroup>
+
+                            </select>
+                        </div>
+
+                        <div id="pep_detail_area" style="display: none; margin-top: 15px; border: 1px solid #ddd; padding: 15px; background-color: #f9f9f9;">
+                            <p><strong><i class="fa fa-info-circle"></i> PEP 연결 대상 정보</strong></p>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <label>연결 리소스 타입</label>
+                                    <input type="text" class="form-control" id="target_resource_type" placeholder="예: REDIS, DB, OAI">
+                                </div>
+                                <div class="col-md-6">
+                                    <label>연결 리소스 서비스명</label>
+                                    <input type="text" class="form-control" id="target_service_name" placeholder="예: AIBE-OK, GENAI-PG-01">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group" id="normal_service_area" style="margin-top: 15px;">
+                            <label for="service_name">서비스명 (Service Name)</label>
+                            <input type="text" class="form-control" id="service_name" placeholder="예: aiblink, chatbot">
+                        </div>
+                    </div>
+                    <div class="box-footer">
+                        <button type="submit" class="btn btn-primary btn-block">규정 기반 명칭 생성</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="box box-success" id="resultBox" style="display: none; margin-top: 20px;">
+                <div class="box-header with-border">
+                    <h3 class="box-title">생성 결과</h3>
+                </div>
+                <div class="box-body">
+                    <div class="well text-center" style="background-color: #fff;">
+                        <label class="text-muted small">Main Resource Name</label>
+                        <h3 class="text-primary" id="resultName" style="font-weight: bold; margin-top: 5px; word-break: break-all;"></h3>
+                        <button class="btn btn-default btn-xs copy-btn" data-target="resultName"><i class="fa fa-copy"></i> Copy</button>
+                    </div>
+
+                    <div id="pepResultArea" class="well text-center" style="background-color: #f0f9ff; border: 1px dashed #3c8dbc; display: none;">
+                        <label class="text-info small">Related Private Endpoint Name</label>
+                        <h3 class="text-info" id="pepName" style="font-weight: bold; margin-top: 5px; word-break: break-all;"></h3>
+                        <button class="btn btn-info btn-xs copy-btn" data-target="pepName"><i class="fa fa-copy"></i> Copy PEP</button>
+                    </div>
+                    <p id="ruleDescription" class="text-muted small" style="margin-top: 15px;"></p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="box box-solid box-success">
+                <div class="box-header with-border">
+                    <h3 class="box-title"><i class="fa fa-history"></i> 최근 생성 히스토리</h3>
+                </div>
+                <div class="box-body no-padding">
+                    <ul class="nav nav-stacked" id="history_list">
+                        <li class="text-center py-3 text-muted" id="no_history">생성 이력이 없습니다.</li>
+                    </ul>
+                </div>
+                <div class="box-footer text-center">
+                    <a href="javascript:void(0)" class="text-danger small" onclick="clearHistory()">히스토리 전체 삭제</a>
+                </div>
+            </div>
+
+            <div class="box box-solid box-default">
+                <div class="box-header with-border">
+                    <h3 class="box-title"><i class="fa fa-book"></i> Azure 리소스 명명 규정 전문</h3>
+                </div>
+                <div class="box-body no-padding small">
+                    <table class="table table-condensed table-bordered" style="margin-bottom: 0;">
+                        <tr class="bg-gray-light">
+                            <th colspan="2" class="text-center">제1조(목적) & 제2조(원칙)</th>
+                        </tr>
+                        <tr>
+                            <td colspan="2" class="text-muted" style="padding: 8px;">
+                                본 규정은 리소스 명칭의 <b>통일성, 관리 효율성, 가독성</b> 확보를 목적으로 하며, 
+                                [환경]-[유형]-[서비스] 구성을 기본 원칙으로 한다.
+                            </td>
+                        </tr>
+
+                        <tr class="bg-gray-light">
+                            <th colspan="2" class="text-center">제3조 명명 규칙의 구조 및 적용</th>
+                        </tr>
+                        <tr>
+                            <td style="width: 30%;"><b>제1항(기본)</b></td>
+                            <td><code>[환경]-[유형]-[서비스]</code><br><small>ex) apdevai-redis-aibe-ok</small></td>
+                        </tr>
+                        <tr>
+                            <td><b>제2항(예외)</b></td>
+                            <td><code>[환경]-[서비스]-[유형]</code><br><small>ex) ap-dev-ai-subsc-rg</small></td>
+                        </tr>
+                        <tr>
+                            <td><b>제3항(무구분)</b></td>
+                            <td><code>[환경][유형][서비스]</code><br><small>ex) apdevaisa (Storage 등)</small></td>
+                        </tr>
+                        <tr>
+                            <td><b>제4항(AIF)</b></td>
+                            <td><code>[환경]-[서비스]</code><br><small>유형 약어(aif) 생략 가능</small></td>
+                        </tr>
+                        <tr>
+                            <td><b>제5항(PEP)</b></td>
+                            <td><code>[환경]-[PEP]-[타입]-[명칭]</code><br><b class="text-danger">전체 대문자 필수</b></td>
+                        </tr>
+
+                        <tr class="bg-gray-light">
+                            <th colspan="2" class="text-center">제4조 구성 요소별 정의</th>
+                        </tr>
+                        <tr>
+                            <td><b>제1항(환경)</b></td>
+                            <td><code>dev</code>(개발), <code>stg</code>(스테징), <code>prd</code>(운영)</td>
+                        </tr>
+                        <tr>
+                            <td><b>접두사</b></td>
+                            <td>모든 환경 약어 앞 <b><code>ap-</code></b> 필수 사용</td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="box-footer no-padding">
+                    <div class="alert alert-info" style="margin: 0; border-radius: 0; border: none; padding: 10px;">
+                        <i class="fa fa-check-circle"></i> 생성 버튼 클릭 시 위 규정이 자동 적용됩니다.
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('resource_naming_form');
+    const resourceTypeSelect = document.getElementById('resource_type');
+    const pepDetailArea = document.getElementById('pep_detail_area');
+    const normalServiceArea = document.getElementById('normal_service_area');
+    const resultBox = document.getElementById('resultBox');
+    const resultName = document.getElementById('resultName');
+    const pepNameLabel = document.getElementById('pepName');
+    const pepResultArea = document.getElementById('pepResultArea');
+    const ruleDescription = document.getElementById('ruleDescription');
+    const historyList = document.getElementById('history_list');
+
+    // 검색 필터 구현
+    const resourceSearch = document.getElementById('resource_search');
+    // const resourceTypeSelect = document.getElementById('resource_type');
+    const originalOptions = Array.from(resourceTypeSelect.querySelectorAll('option'));
+
+    // 검색창 입력 이벤트
+    resourceSearch.addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase();
+        
+        // 모든 옵션을 순회하며 필터링
+        originalOptions.forEach(option => {
+            const text = option.textContent.toLowerCase();
+            const value = option.value.toLowerCase();
+            
+            // 텍스트나 밸류에 검색어가 포함되면 표시, 아니면 숨김
+            if (text.includes(searchTerm) || value.includes(searchTerm)) {
+                option.style.display = 'block';
+            } else {
+                option.style.display = 'none';
+            }
+        });
+
+        // 검색 결과가 있는 첫 번째 항목 자동 선택 (선택 사항)
+        const firstVisible = originalOptions.find(opt => opt.style.display !== 'none');
+        if (firstVisible && searchTerm !== "") {
+            // 필요 시 자동 선택 로직 추가 가능
+        }
+    });
+
+    // 히스토리 초기 로드
+    renderHistory();
+
+    resourceTypeSelect.addEventListener('change', function() {
+        if (this.value === 'pep') {
+            pepDetailArea.style.display = 'block';
+            normalServiceArea.style.display = 'none';
+        } else {
+            pepDetailArea.style.display = 'none';
+            normalServiceArea.style.display = 'block';
+        }
+    });
+
+    form.addEventListener('submit', async function(event) {
+        event.preventDefault();
+        const selectedType = resourceTypeSelect.value;
+        const isPepSingle = (selectedType === 'pep');
+
+        const payload = {
+            env: document.getElementById('env').value,
+            resource_type: selectedType,
+            service_name: !isPepSingle ? document.getElementById('service_name').value.trim() : null,
+            target_resource_type: isPepSingle ? document.getElementById('target_resource_type').value.trim() : null,
+            target_service_name: isPepSingle ? document.getElementById('target_service_name').value.trim() : null
+        };
+
+        if (isPepSingle && (!payload.target_resource_type || !payload.target_service_name)) {
+            alert('PEP 연결 정보를 입력해 주세요.'); return;
+        }
+        if (!isPepSingle && !payload.service_name) {
+            alert('서비스명을 입력해 주세요.'); return;
+        }
+
+        try {
+            const response = await fetch('/common/CreateResourceName', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                resultName.textContent = result.generated_name;
+                ruleDescription.innerHTML = `<strong>적용 규칙:</strong> ${result.rule_info}`;
+
+                if (result.pep_name) {
+                    pepNameLabel.textContent = result.pep_name;
+                    pepResultArea.style.display = 'block';
+                } else {
+                    pepResultArea.style.display = 'none';
+                }
+
+                resultBox.style.display = 'block';
+                
+                // 히스토리에 추가
+                addHistory(result.generated_name, result.pep_name);
+            } else {
+                alert('오류: ' + (result.message || '요청 처리에 실패했습니다.'));
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('통신 오류가 발생했습니다.');
+        }
+    });
+
+    // 히스토리 관리 함수
+    function addHistory(main, pep) {
+        let history = JSON.parse(localStorage.getItem('azure_naming_history') || '[]');
+        const newItem = { main, pep, time: new Date().toLocaleTimeString() };
+        history.unshift(newItem);
+        history = history.slice(0, 5); // 최근 5개만 유지
+        localStorage.setItem('azure_naming_history', JSON.stringify(history));
+        renderHistory();
+    }
+
+    function renderHistory() {
+        const history = JSON.parse(localStorage.getItem('azure_naming_history') || '[]');
+        if (history.length === 0) {
+            historyList.innerHTML = '<li class="text-center py-3 text-muted" id="no_history">생성 이력이 없습니다.</li>';
+            return;
+        }
+        historyList.innerHTML = history.map((item, idx) => `
+            <li>
+                <a href="javascript:void(0)" onclick="copyText('${item.main}')" style="padding: 10px 15px;">
+                    <strong>${item.main}</strong>
+                    ${item.pep ? `<br><small class="text-info">${item.pep}</small>` : ''}
+                    <span class="pull-right text-muted small">${item.time}</span>
+                </a>
+            </li>
+        `).join('');
+    }
+
+    window.clearHistory = function() {
+        if(confirm('모든 히스토리를 삭제하시겠습니까?')) {
+            localStorage.removeItem('azure_naming_history');
+            renderHistory();
+        }
+    };
+
+    window.copyText = function(text) {
+        navigator.clipboard.writeText(text).then(() => {
+            alert('복사되었습니다: ' + text);
+        });
+    };
+
+    document.addEventListener('click', function(e) {
+        if (e.target && (e.target.classList.contains('copy-btn') || e.target.parentElement.classList.contains('copy-btn'))) {
+            const btn = e.target.classList.contains('copy-btn') ? e.target : e.target.parentElement;
+            const targetId = btn.getAttribute('data-target');
+            const text = document.getElementById(targetId).textContent;
+            navigator.clipboard.writeText(text).then(() => alert('복사되었습니다: ' + text));
+        }
+    });
+});
+</script>
+{% endblock %}

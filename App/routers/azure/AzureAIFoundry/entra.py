@@ -15,7 +15,7 @@ router = APIRouter()
 class AIFoundryInfo(BaseModel):
     project_endpoint: str
 
-async def create_client(data: AIFoundryInfo):
+async def create_client(data: AIFoundryInfo, result_message):
     project_client = None
     try:
         project_client = AIProjectClient(
@@ -37,7 +37,7 @@ async def agent_list(data: AIFoundryInfo):
                 credential=DefaultAzureCredential(),
                 endpoint=data.project_endpoint,
             )
-        # project_client, result_message = create_client(data, result_message)
+        project_client, result_message = await create_client(data, result_message)
         # 생성된 에이전트 리스트 조회
         result_message += "생성된 Agent List 조회"+"\n"
         agent_list = project_client.agents.list_agents()
@@ -60,6 +60,11 @@ async def agent_list(data: AIFoundryInfo):
     return {"message": result_message}
 
 @router.post("/AIFoundry/delete_agent")
+async def agent_list(data: AIFoundryInfo):
+    result_message = ""
+    return {"message": result_message}
+
+@router.post("/AIFoundry/call_LLM")
 async def agent_list(data: AIFoundryInfo):
     result_message = ""
     return {"message": result_message}

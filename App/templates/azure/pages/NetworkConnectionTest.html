@@ -1,58 +1,83 @@
 {% extends '/azure/base.html' %}
 
-{% block title %}Index Page{% endblock %}
+{% block title %}Network Diagnostics{% endblock %}
 
 {% block content %}
-
 <section class="content">
     <div class="row">
-        <div class="col-md-6">
+        <div class="col-md-4">
             <div class="box box-primary">
                 <div class="box-header with-border">
-                    <h3 class="box-title">Ping Test</h3>
+                    <h3 class="box-title"><i class="fa fa-terminal"></i> Ping Test</h3>
                 </div>
-                <form role="form" id="accessKeyForm">
+                <form role="form" class="diag-form" data-endpoint="/NetworkConnection/ping">
                     <div class="box-body">
                         <div class="form-group">
-                            <label for="ping_dns">DNS</label>
-                            <input type="text" class="form-control" id="ping_dns" placeholder="Enter connection string">
+                            <label for="ping_dns">Target DNS/IP</label>
+                            <input type="text" class="form-control" id="ping_dns" name="dns" placeholder="e.g. google.com" required>
                         </div>
                     </div>
                     <div class="box-footer">
-                        <button type="submit" class="btn btn-primary">Submit</button>
+                        <button type="submit" class="btn btn-primary btn-block">Run Ping</button>
                     </div>
                 </form>
             </div>
-            </div>
+        </div>
 
-        <div class="col-md-6">
-            <div class="box box-primary">
+        <div class="col-md-4">
+            <div class="box box-info">
                 <div class="box-header with-border">
-                    <h3 class="box-title">nslookup Test</h3>
+                    <h3 class="box-title"><i class="fa fa-search"></i> DNS Lookup</h3>
                 </div>
-                <form role="form" id="workload-IdentityForm">
+                <form role="form" class="diag-form" data-endpoint="/NetworkConnection/nslookup">
                     <div class="box-body">
                         <div class="form-group">
-                            <label for="nslookup_dns">DNS</label>
-                            <input type="text" class="form-control" id="nslookup_dns" placeholder="Enter Account url">
+                            <label for="nslookup_dns">Domain Name</label>
+                            <input type="text" class="form-control" id="nslookup_dns" name="dns" placeholder="e.g. microsoft.com" required>
                         </div>
                     </div>
                     <div class="box-footer">
-                        <button type="submit" class="btn btn-primary">Submit</button>
+                        <button type="submit" class="btn btn-info btn-block">Check DNS</button>
                     </div>
                 </form>
             </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="box box-warning">
+                <div class="box-header with-border">
+                    <h3 class="box-title"><i class="fa fa-plug"></i> Port Check</h3>
+                </div>
+                <form role="form" class="diag-form" data-endpoint="/NetworkConnection/port">
+                    <div class="box-body">
+                        <div class="form-group">
+                            <label for="port_host">Host</label>
+                            <input type="text" class="form-control" id="port_host" name="host" placeholder="e.g. 127.0.0.1" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="port_num">Port</label>
+                            <input type="number" class="form-control" id="port_num" name="port" placeholder="e.g. 1433" required>
+                        </div>
+                    </div>
+                    <div class="box-footer">
+                        <button type="submit" class="btn btn-warning btn-block">Check Port</button>
+                    </div>
+                </form>
             </div>
+        </div>
     </div>
     
     <div class="row" style="margin-top: 20px;">
         <div class="col-md-12">
-            <div class="box box-success" id="resultBox" style="display: none;">
+            <div class="box box-solid" id="resultBox" style="display: none; border-radius: 5px;">
                 <div class="box-header with-border">
-                    <h3 class="box-title">결과</h3>
+                    <h3 class="box-title">Output Console</h3>
+                    <div class="box-tools pull-right">
+                        <button type="button" class="btn btn-box-tool" onclick="document.getElementById('resultBox').style.display='none'"><i class="fa fa-times"></i></button>
+                    </div>
                 </div>
-                <div class="box-body">
-                    <pre id="resultMessage"></pre>
+                <div class="box-body" style="background-color: #f8f9fa;">
+                    <pre id="resultMessage" style="min-height: 100px; border: none; background: transparent;"></pre>
                 </div>
             </div>
         </div>
@@ -61,90 +86,47 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const accessKeyForm = document.getElementById('accessKeyForm');
-    const workload_IdentityForm = document.getElementById('workload-IdentityForm');
     const resultBox = document.getElementById('resultBox');
     const resultMessage = document.getElementById('resultMessage');
 
-    accessKeyForm.addEventListener('submit', async function(event) {
-        event.preventDefault(); // 기본 폼 제출 동작 방지
+    // 모든 진단 폼에 대해 공통 이벤트 리스너 등록
+    document.querySelectorAll('.diag-form').forEach(form => {
+        form.addEventListener('submit', async function(event) {
+            event.preventDefault();
+            
+            const endpoint = this.getAttribute('data-endpoint');
+            const formData = new FormData(this);
+            const data = {};
+            
+            // 폼 데이터를 JSON으로 변환
+            formData.forEach((value, key) => { data[key] = value; });
 
-        const ping_dns = document.getElementById('ping_dns').value;
-        if (!ping_dns) {
-            alert('Connection String을 입력해주세요.');
-            return;
-        }
+            // UI 초기화
+            resultMessage.textContent = '🔄 처리 중입니다. 잠시만 기다려주세요...';
+            resultBox.style.display = 'block';
+            resultBox.className = 'box box-solid'; // 클래스 초기화
 
-        resultMessage.textContent = '처리 중...';
-        resultBox.style.display = 'block';
+            try {
+                const response = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
 
-        try {
-            const response = await fetch('/NetworkConnection/ping', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ dns: ping_dns })
-            });
+                const result = await response.json();
 
-            const result = await response.json();
-
-            if (response.ok) {
-                resultMessage.textContent = result.message;
-                resultBox.classList.remove('box-danger');
-                resultBox.classList.add('box-success');
-            } else {
-                resultMessage.textContent = result.message || '알 수 없는 오류가 발생했습니다.';
-                resultBox.classList.remove('box-success');
+                if (response.ok) {
+                    resultMessage.textContent = result.message;
+                    resultBox.classList.add('box-success');
+                } else {
+                    resultMessage.textContent = `Error: ${result.detail || result.message || '알 수 없는 오류'}`;
+                    resultBox.classList.add('box-danger');
+                }
+            } catch (error) {
+                resultMessage.textContent = `❌ 네트워크 오류: ${error.message}`;
                 resultBox.classList.add('box-danger');
             }
-
-        } catch (error) {
-            console.error('Fetch Error:', error);
-            resultMessage.textContent = `오류가 발생했습니다: ${error.message}`;
-            resultBox.classList.remove('box-success');
-            resultBox.classList.add('box-danger');
-        }
-    });
-    workload_IdentityForm.addEventListener('submit', async function(event) {
-        event.preventDefault(); // 기본 폼 제출 동작 방지
-
-        const nslookup_dns = document.getElementById('nslookup_dns').value;
-        if (!nslookup_dns) {
-            alert('Connection String을 입력해주세요.');
-            return;
-        }
-
-        resultMessage.textContent = '처리 중...';
-        resultBox.style.display = 'block';
-
-        try {
-            const response = await fetch('/NetworkConnection/nslookup', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ dns: nslookup_dns })
-            });
-
-            const result = await response.json();
-
-            if (response.ok) {
-                resultMessage.textContent = result.message;
-                resultBox.classList.remove('box-danger');
-                resultBox.classList.add('box-success');
-            } else {
-                resultMessage.textContent = result.message || '알 수 없는 오류가 발생했습니다.';
-                resultBox.classList.remove('box-success');
-                resultBox.classList.add('box-danger');
-            }
-
-        } catch (error) {
-            console.error('Fetch Error:', error);
-            resultMessage.textContent = `오류가 발생했습니다: ${error.message}`;
-            resultBox.classList.remove('box-success');
-            resultBox.classList.add('box-danger');
-        }
+        });
     });
 });
 </script>

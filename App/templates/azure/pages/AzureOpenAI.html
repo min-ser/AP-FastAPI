@@ -1,0 +1,410 @@
+{% extends '/azure/base.html' %}
+
+{% block title %}Index Page{% endblock %}
+
+{% block content %}
+
+<section class="content">
+    <div class="row">
+        <div class="col-md-6">
+            <div class="box box-primary">
+                <div class="box-header with-border">
+                    <h3 class="box-title">Access Key</h3>
+                </div>
+                <form role="form" id="openai_AK_Form">
+                    <div class="box-body">
+                        <div class="form-group">
+                            <label for="redis_host">Endpoint</label>
+                            <input type="text" class="form-control" id="openAI_Endpoint_ak" placeholder="Endpoint">
+                            <label for="redis_host">Model API Version</label>
+                            <input type="text" class="form-control" id="openAI_ModelVersion_ak" placeholder="Model API Version">
+                            <label for="redis_host">Model Deployment Name</label>
+                            <input type="text" class="form-control" id="openAI_Deployment_ak" placeholder="Model Deployment Name">
+                            <label for="redis_host">Model Key</label>
+                            <input type="text" class="form-control" id="openAI_Key_ak" placeholder="Model Key">
+                            <label for="redis_host">Message</label>
+                            <input type="text" class="form-control" id="openAI_Message_ak" placeholder="Message">
+                        </div>
+                    </div>
+                    <div class="box-footer">
+                        <button type="submit" class="btn btn-primary">Submit</button>
+                    </div>
+                </form>
+            </div>
+            <div class="box box-primary">
+                <div class="box-header with-border">
+                    <h3 class="box-title">Access Key Embedding</h3>
+                </div>
+                <form role="form" id="openai_embedding_AK_Form">
+                    <div class="box-body">
+                        <div class="form-group">
+                            <label for="redis_host">Endpoint</label>
+                            <input type="text" class="form-control" id="openAI_embedding_Endpoint_ak" placeholder="Endpoint">
+                            <label for="redis_host">Model API Version</label>
+                            <input type="text" class="form-control" id="openAI_embedding_ModelVersion_ak" placeholder="Model API Version">
+                            <label for="redis_host">Model Deployment Name</label>
+                            <input type="text" class="form-control" id="openAI_embedding_Deployment_ak" placeholder="Model Deployment Name">
+                            <label for="redis_host">Model Key</label>
+                            <input type="text" class="form-control" id="openAI_embedding_Key_ak" placeholder="Model Key">
+                            <label for="redis_host">Message</label>
+                            <input type="text" class="form-control" id="openAI_embedding_Message_ak" placeholder="Message">
+                        </div>
+                    </div>
+                    <div class="box-footer">
+                        <button type="submit" class="btn btn-primary">Submit</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="box box-primary">
+                <div class="box-header with-border">
+                    <h3 class="box-title">Workload Identity</h3>
+                </div>
+                <form role="form" id="openai_WI_Form">
+                    <div class="box-body">    
+                        <div class="form-group">
+                            <label for="redis_host">Endpoint</label>
+                            <input type="text" class="form-control" id="openAI_Endpoint_wi" placeholder="Endpoint">
+                            <label for="redis_host">Model API Version</label>
+                            <input type="text" class="form-control" id="openAI_ModelVersion_wi" placeholder="Model API Version">
+                            <label for="redis_host">Model Deployment Name</label>
+                            <input type="text" class="form-control" id="openAI_Deployment_wi" placeholder="Model Deployment Name">
+                            <label for="redis_host">Model Key[미사용]</label>
+                            <input type="text" class="form-control" id="#" placeholder="Model Key">
+                            <label for="redis_host">Message</label>
+                            <input type="text" class="form-control" id="openAI_Message_wi" placeholder="Message">
+                        </div>
+                    </div>
+                    <div class="box-footer">
+                        <button type="submit" class="btn btn-primary">Submit</button>
+                    </div>
+                </form>
+            </div>
+            <div class="box box-primary">
+                <div class="box-header with-border">
+                    <h3 class="box-title">Workload Identity</h3>
+                </div>
+                <form role="form" id="openai_embedding_WI_Form">
+                    <div class="box-body">    
+                        <div class="form-group">
+                            <label for="redis_host">Endpoint</label>
+                            <input type="text" class="form-control" id="openAI_embedding_Endpoint_wi" placeholder="Endpoint">
+                            <label for="redis_host">Model API Version</label>
+                            <input type="text" class="form-control" id="openAI_embedding_ModelVersion_wi" placeholder="Model API Version">
+                            <label for="redis_host">Model Deployment Name</label>
+                            <input type="text" class="form-control" id="openAI_embedding_Deployment_wi" placeholder="Model Deployment Name">
+                            <label for="redis_host">Model Key[미사용]</label>
+                            <input type="text" class="form-control" id="#" placeholder="Model Key">
+                            <label for="redis_host">Message</label>
+                            <input type="text" class="form-control" id="openAI_embedding_Message_wi" placeholder="Message">
+                        </div>
+                    </div>
+                    <div class="box-footer">
+                        <button type="submit" class="btn btn-primary">Submit</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row" style="margin-top: 20px;">
+        <div class="col-md-12">
+            <div class="box box-success" id="resultBox" style="display: none;">
+                <div class="box-header with-border">
+                    <h3 class="box-title">결과</h3>
+                </div>
+                <div class="box-body">
+                    <pre id="resultMessage"></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Form Tag
+    const openai_AK_Form = document.getElementById('openai_AK_Form');
+    const openai_WI_Form = document.getElementById('openai_WI_Form');
+    const openai_embedding_AK_Form = document.getElementById('openai_embedding_AK_Form');
+    const openai_embedding_WI_Form = document.getElementById('openai_embedding_WI_Form');
+    
+    // Result Box
+    const resultBox = document.getElementById('resultBox');
+    const resultMessage = document.getElementById('resultMessage');
+
+    // AccessKey 방식 Ajax 전송
+    openai_AK_Form.addEventListener('submit', async function(event) {
+        event.preventDefault(); // 기본 폼 제출 동작 방지
+
+        const openAI_Endpoint_ak = document.getElementById('openAI_Endpoint_ak').value;
+        if (!openAI_Endpoint_ak) {
+            alert('openAI_Endpoint_ak is null.');
+            return;
+        }
+        const openAI_ModelVersion_ak = document.getElementById('openAI_ModelVersion_ak').value;
+        if (!openAI_Endpoint_ak) {
+            alert('openAI_ModelVersion_ak is null.');
+            return;
+        }
+        const openAI_Deployment_ak = document.getElementById('openAI_Deployment_ak').value;
+        if (!openAI_Endpoint_ak) {
+            alert('openAI_Deployment_ak is null.');
+            return;
+        }
+        const openAI_Key_ak = document.getElementById('openAI_Key_ak').value;
+        if (!openAI_Endpoint_ak) {
+            alert('openAI_Key_ak is null.');
+            return;
+        }
+        const openAI_Message_ak = document.getElementById('openAI_Message_ak').value;
+        if (!openAI_Endpoint_ak) {
+            alert('openAI_Message_ak is null.');
+            return;
+        }
+       
+        resultMessage.textContent = '처리 중...';
+        resultBox.style.display = 'block';
+
+        try {
+            const response = await fetch('/OpenAI/accesskey', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ 
+                    openAI_Endpoint_ak: openAI_Endpoint_ak,
+                    openAI_ModelVersion_ak: openAI_ModelVersion_ak,
+                    openAI_Deployment_ak: openAI_Deployment_ak,
+                    openAI_Key_ak: openAI_Key_ak,
+                    openAI_Message_ak: openAI_Message_ak,
+                 })
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                resultMessage.textContent = result.message;
+                resultBox.classList.remove('box-danger');
+                resultBox.classList.add('box-success');
+            } else {
+                resultMessage.textContent = result.message || '알 수 없는 오류가 발생했습니다.';
+                resultBox.classList.remove('box-success');
+                resultBox.classList.add('box-danger');
+            }
+
+        } catch (error) {
+            console.error('Fetch Error:', error);
+            resultMessage.textContent = `오류가 발생했습니다: ${error.message}`;
+            resultBox.classList.remove('box-success');
+            resultBox.classList.add('box-danger');
+        }
+    });
+
+    // Workload Identity 방식 Ajax 전송
+    openai_WI_Form.addEventListener('submit', async function(event) {
+        event.preventDefault(); // 기본 폼 제출 동작 방지
+
+        const openAI_Endpoint_wi = document.getElementById('openAI_Endpoint_wi').value;
+        if (!openAI_Endpoint_wi) {
+            alert('openAI_Endpoint_wi is null.');
+            return;
+        }
+        const openAI_ModelVersion_wi = document.getElementById('openAI_ModelVersion_wi').value;
+        if (!openAI_ModelVersion_wi) {
+            alert('openAI_ModelVersion_wi is null.');
+            return;
+        }
+        const openAI_Deployment_wi = document.getElementById('openAI_Deployment_wi').value;
+        if (!openAI_Deployment_wi) {
+            alert('openAI_Deployment_wi is null.');
+            return;
+        }
+        // const openAI_Key_ak = document.getElementById('openAI_Key_wi').value;
+        // if (!openAI_Endpoint_ak) {
+        //     alert('openAI_Key_ak is null.');
+        //     return;
+        // }
+        const openAI_Message_wi = document.getElementById('openAI_Message_wi').value;
+        if (!openAI_Message_wi) {
+            alert('openAI_Message_wi is null.');
+            return;
+        }
+       
+        resultMessage.textContent = '처리 중...';
+        resultBox.style.display = 'block';
+
+        try {
+            const response = await fetch('/OpenAI/workloadIdentity', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ 
+                    openAI_Endpoint_wi: openAI_Endpoint_wi,
+                    openAI_ModelVersion_wi: openAI_ModelVersion_wi,
+                    openAI_Deployment_wi: openAI_Deployment_wi,
+                    openAI_Message_wi: openAI_Message_wi,
+                 })
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                resultMessage.textContent = result.message;
+                resultBox.classList.remove('box-danger');
+                resultBox.classList.add('box-success');
+            } else {
+                resultMessage.textContent = result.message || '알 수 없는 오류가 발생했습니다.';
+                resultBox.classList.remove('box-success');
+                resultBox.classList.add('box-danger');
+            }
+
+        } catch (error) {
+            console.error('Fetch Error:', error);
+            resultMessage.textContent = `오류가 발생했습니다: ${error.message}`;
+            resultBox.classList.remove('box-success');
+            resultBox.classList.add('box-danger');
+        }
+    });
+
+    // AccessKey 방식 Ajax 전송
+    openai_embedding_AK_Form.addEventListener('submit', async function(event) {
+        event.preventDefault(); // 기본 폼 제출 동작 방지
+
+        const openAI_embedding_Endpoint_ak = document.getElementById('openAI_embedding_Endpoint_ak').value;
+        if (!openAI_embedding_Endpoint_ak) {
+            alert('openAI_embedding_Endpoint_ak is null.');
+            return;
+        }
+        const openAI_embedding_ModelVersion_ak = document.getElementById('openAI_embedding_ModelVersion_ak').value;
+        if (!openAI_embedding_ModelVersion_ak) {
+            alert('openAI_ModelVersion_ak is null.');
+            return;
+        }
+        const openAI_embedding_Deployment_ak = document.getElementById('openAI_embedding_Deployment_ak').value;
+        if (!openAI_embedding_Deployment_ak) {
+            alert('openAI_embedding_Deployment_ak is null.');
+            return;
+        }
+        const openAI_embedding_Key_ak = document.getElementById('openAI_embedding_Key_ak').value;
+        if (!openAI_embedding_Key_ak) {
+            alert('openAI_embedding_Key_ak is null.');
+            return;
+        }
+        const openAI_embedding_Message_ak = document.getElementById('openAI_embedding_Message_ak').value;
+        if (!openAI_embedding_Message_ak) {
+            alert('openAI_embedding_Message_ak is null.');
+            return;
+        }
+       
+        resultMessage.textContent = '처리 중...';
+        resultBox.style.display = 'block';
+
+        try {
+            const response = await fetch('/OpenAI/accesskey/embedding', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ 
+                    openAI_Endpoint_ak: openAI_embedding_Endpoint_ak,
+                    openAI_ModelVersion_ak: openAI_embedding_ModelVersion_ak,
+                    openAI_Deployment_ak: openAI_embedding_Deployment_ak,
+                    openAI_Key_ak: openAI_embedding_Key_ak,
+                    openAI_Message_ak: openAI_embedding_Message_ak,
+                 })
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                resultMessage.textContent = result.message;
+                resultBox.classList.remove('box-danger');
+                resultBox.classList.add('box-success');
+            } else {
+                resultMessage.textContent = result.message || '알 수 없는 오류가 발생했습니다.';
+                resultBox.classList.remove('box-success');
+                resultBox.classList.add('box-danger');
+            }
+
+        } catch (error) {
+            console.error('Fetch Error:', error);
+            resultMessage.textContent = `오류가 발생했습니다: ${error.message}`;
+            resultBox.classList.remove('box-success');
+            resultBox.classList.add('box-danger');
+        }
+    });
+
+    // AccessKey 방식 Ajax 전송
+    openai_embedding_WI_Form.addEventListener('submit', async function(event) {
+        event.preventDefault(); // 기본 폼 제출 동작 방지
+
+        const openAI_embedding_Endpoint_wi = document.getElementById('openAI_embedding_Endpoint_wi').value;
+        if (!openAI_embedding_Endpoint_wi) {
+            alert('openAI_embedding_Endpoint_wi is null.');
+            return;
+        }
+        const openAI_embedding_ModelVersion_wi = document.getElementById('openAI_embedding_ModelVersion_wi').value;
+        if (!openAI_embedding_ModelVersion_wi) {
+            alert('openAI_embedding_ModelVersion_wi is null.');
+            return;
+        }
+        const openAI_embedding_Deployment_wi = document.getElementById('openAI_embedding_Deployment_wi').value;
+        if (!openAI_embedding_Deployment_wi) {
+            alert('openAI_embedding_Deployment_wi is null.');
+            return;
+        }
+        // const openAI_embedding_Key_wi = document.getElementById('openAI_embedding_Key_wi').value;
+        // if (!openAI_embedding_Key_wi) {
+        //     alert('openAI_embedding_Key_wi is null.');
+        //     return;
+        // }
+        const openAI_embedding_Message_wi = document.getElementById('openAI_embedding_Message_wi').value;
+        if (!openAI_embedding_Message_wi) {
+            alert('openAI_embedding_Message_wi is null.');
+            return;
+        }
+       
+        resultMessage.textContent = '처리 중...';
+        resultBox.style.display = 'block';
+
+        try {
+            const response = await fetch('/OpenAI/workloadIdentity/embedding', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ 
+                    openAI_Endpoint_wi: openAI_embedding_Endpoint_wi,
+                    openAI_ModelVersion_wi: openAI_embedding_ModelVersion_wi,
+                    openAI_Deployment_wi: openAI_embedding_Deployment_wi,
+                    // openAI_Key_wi: openAI_embedding_Key_wi,
+                    openAI_Message_wi: openAI_embedding_Message_wi,
+                 })
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                resultMessage.textContent = result.message;
+                resultBox.classList.remove('box-danger');
+                resultBox.classList.add('box-success');
+            } else {
+                resultMessage.textContent = result.message || '알 수 없는 오류가 발생했습니다.';
+                resultBox.classList.remove('box-success');
+                resultBox.classList.add('box-danger');
+            }
+
+        } catch (error) {
+            console.error('Fetch Error:', error);
+            resultMessage.textContent = `오류가 발생했습니다: ${error.message}`;
+            resultBox.classList.remove('box-success');
+            resultBox.classList.add('box-danger');
+        }
+    });
+});
+</script>
+{% endblock %}

@@ -44,3 +44,23 @@ def azure_db(request: Request):
 def azure_db(request: Request):
     return templates.TemplateResponse(name="azure/pages/NetworkConnectionTest.html", context={"request": request, "title": "ALL","subtitle" : "Network Connection Test"})
 
+@router.get("/azure/OpenAI", response_class=HTMLResponse)
+def azure_db(request: Request):
+    return templates.TemplateResponse(name="azure/pages/AzureOpenAI.html", context={"request": request, "title": "Azure","subtitle" : "OpenAI"})
+
+@router.get("/azure/OpenAI/Chat", response_class=HTMLResponse)
+def azure_db(request: Request):
+    return templates.TemplateResponse(name="azure/pages/OpenAI/Chat.html", context={"request": request, "title": "Azure","subtitle" : "OpenAI Chatting"})
+
+@router.get("/azure/OpenAI/Embedding", response_class=HTMLResponse)
+def azure_db(request: Request):
+    return templates.TemplateResponse(name="azure/pages/OpenAI/Embedding.html", context={"request": request, "title": "Azure","subtitle" : "OpenAI Embedding Model"})
+
+@router.get("/azure/AISearch", response_class=HTMLResponse)
+def azure_db(request: Request):
+    return templates.TemplateResponse(name="azure/pages/AzureAISearch.html", context={"request": request, "title": "Azure","subtitle" : "AISearch"})
+
+@router.get("/azure/AzureNamingRule", response_class=HTMLResponse)
+def azure_Naming_Rule(request: Request):
+    return templates.TemplateResponse(name="azure/pages/AzureNamingRule.html", context={"request": request, "title": "Azure","subtitle" : "AzureNamingRule"})
+

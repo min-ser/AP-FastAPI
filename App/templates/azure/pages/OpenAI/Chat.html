@@ -1,0 +1,454 @@
+{% extends '/azure/base.html' %}
+
+{% block title %}Index Page{% endblock %}
+
+{% block content %}
+
+<section class="content">
+    <div class="row">
+            <div class="box box-primary">
+                <div class="box-header with-border">
+                    <h3 class="box-title">Azure OpenAI 인증 설정</h3>
+                </div>
+                <div class="box-body">
+                    <div class="row">
+                        <div class="col-md-6" style="border-right: 1px solid #f4f4f4;">
+                            <h4 style="margin-bottom: 15px;">Access Key 방식 
+                                <small id="status-ak" class="label label-default">연결 필요</small>
+                            </h4>
+                            <form id="openai_AK_Form">
+                                <div class="form-group">
+                                    <label>Endpoint</label>
+                                    <input type="text" class="form-control" id="openAI_Endpoint_ak" placeholder="https://your-resource.openai.azure.com/">
+                                    <label>Model API Version</label>
+                                    <input type="text" class="form-control" id="openAI_ModelVersion_ak" placeholder="2024-02-15-preview">
+                                    <label>Model Deployment Name</label>
+                                    <input type="text" class="form-control" id="openAI_Deployment_ak" placeholder="gpt-4o">
+                                    <label>Model Key</label>
+                                    <input type="password" class="form-control" id="openAI_Key_ak" placeholder="Your API Key">
+                                </div>
+                                <div style="margin-top: 15px;">
+                                    <button type="button" id="check-ak-btn" class="btn btn-warning btn-sm">연결 체크</button>
+                                    <!-- <button type="submit" class="btn btn-primary btn-sm" id="submit-ak" disabled>채팅 가능</button> -->
+                                </div>
+                            </form>
+                        </div>
+
+                        <div class="col-md-6">
+                            <h4 style="margin-bottom: 15px;">Entra ID 방식 
+                                <small id="status-wi" class="label label-default">연결 필요</small>
+                            </h4>
+                            <form id="openai_WI_Form">
+                                <div class="form-group">
+                                    <label>Endpoint</label>
+                                    <input type="text" class="form-control" id="openAI_Endpoint_wi" placeholder="https://your-resource.openai.azure.com/">
+                                    <label>Model API Version</label>
+                                    <input type="text" class="form-control" id="openAI_ModelVersion_wi" placeholder="2024-02-15-preview">
+                                    <label>Model Deployment Name</label>
+                                    <input type="text" class="form-control" id="openAI_Deployment_wi" placeholder="gpt-4o">
+                                    <p class="help-block" style="font-size: 12px; color: #777;">* Key가 필요 없으며 배정된 권한으로 인증합니다.</p>
+                                </div>
+                                <div style="margin-top: 15px;">
+                                    <button type="button" id="check-wi-btn" class="btn btn-warning btn-sm">연결 체크</button>
+                                    <!-- <button type="submit" class="btn btn-primary btn-sm" id="submit-wi" disabled>채팅 가능</button> -->
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+    </div>
+    
+    <div class="row">
+        <!-- GPT Chatting Box -->
+            <div class="box box-success">
+                <div class="box-header">
+                    <i class="fa fa-comments-o"></i>
+                    <h3 class="box-title">Chat</h3>
+                </div>
+                
+                <div class="box-body chat" id="chat-box" style="height: 400px; overflow-y: auto;">
+                    </div>
+    
+                <div class="box-footer">
+                    <div class="input-group">
+                    <input id="chat-input" class="form-control" placeholder="메시지를 입력하세요...">
+                    <div class="input-group-btn">
+                        <button type="button" id="send-btn" class="btn btn-success">
+                        <i class="fa fa-plus"></i>
+                        </button>
+                    </div>
+                    </div>
+                </div>
+            </div>
+        <!-- /.box (chat box) -->
+
+    </div>
+
+    <div class="row" style="margin-top: 20px;">
+        <div class="col-md-12">
+            <div class="box box-success" id="resultBox" style="display: none;">
+                <div class="box-header with-border">
+                    <h3 class="box-title">결과</h3>
+                </div>
+                <div class="box-body">
+                    <pre id="resultMessage"></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Form Tag
+    const openai_AK_Form = document.getElementById('openai_AK_Form');
+    const openai_WI_Form = document.getElementById('openai_WI_Form');
+    const openai_embedding_AK_Form = document.getElementById('openai_embedding_AK_Form');
+    const openai_embedding_WI_Form = document.getElementById('openai_embedding_WI_Form');
+    
+    // Result Box
+    const resultBox = document.getElementById('resultBox');
+    const resultMessage = document.getElementById('resultMessage');
+
+    // AccessKey 방식 Ajax 전송
+    openai_AK_Form.addEventListener('submit', async function(event) {
+        event.preventDefault(); // 기본 폼 제출 동작 방지
+
+        const openAI_Endpoint_ak = document.getElementById('openAI_Endpoint_ak').value;
+        if (!openAI_Endpoint_ak) {
+            alert('openAI_Endpoint_ak is null.');
+            return;
+        }
+        const openAI_ModelVersion_ak = document.getElementById('openAI_ModelVersion_ak').value;
+        if (!openAI_Endpoint_ak) {
+            alert('openAI_ModelVersion_ak is null.');
+            return;
+        }
+        const openAI_Deployment_ak = document.getElementById('openAI_Deployment_ak').value;
+        if (!openAI_Endpoint_ak) {
+            alert('openAI_Deployment_ak is null.');
+            return;
+        }
+        const openAI_Key_ak = document.getElementById('openAI_Key_ak').value;
+        if (!openAI_Endpoint_ak) {
+            alert('openAI_Key_ak is null.');
+            return;
+        }
+        const openAI_Message_ak = document.getElementById('openAI_Message_ak').value;
+        if (!openAI_Endpoint_ak) {
+            alert('openAI_Message_ak is null.');
+            return;
+        }
+       
+        resultMessage.textContent = '처리 중...';
+        resultBox.style.display = 'block';
+
+        try {
+            const response = await fetch('/OpenAI/accesskey', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ 
+                    openAI_Endpoint_ak: openAI_Endpoint_ak,
+                    openAI_ModelVersion_ak: openAI_ModelVersion_ak,
+                    openAI_Deployment_ak: openAI_Deployment_ak,
+                    openAI_Key_ak: openAI_Key_ak,
+                    openAI_Message_ak: openAI_Message_ak,
+                 })
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                resultMessage.textContent = result.message;
+                resultBox.classList.remove('box-danger');
+                resultBox.classList.add('box-success');
+            } else {
+                resultMessage.textContent = result.message || '알 수 없는 오류가 발생했습니다.';
+                resultBox.classList.remove('box-success');
+                resultBox.classList.add('box-danger');
+            }
+
+        } catch (error) {
+            console.error('Fetch Error:', error);
+            resultMessage.textContent = `오류가 발생했습니다: ${error.message}`;
+            resultBox.classList.remove('box-success');
+            resultBox.classList.add('box-danger');
+        }
+    });
+
+    let currentMode = null; // 'AK' 또는 'WI' 저장
+
+    // --- 1. 연결 체크 로직 (Access Key) ---
+    document.getElementById('check-ak-btn').onclick = async function() {
+        const data = {
+            openAI_Endpoint_ak: document.getElementById('openAI_Endpoint_ak').value,
+            openAI_ModelVersion_ak: document.getElementById('openAI_ModelVersion_ak').value,
+            openAI_Deployment_ak: document.getElementById('openAI_Deployment_ak').value,
+            openAI_Key_ak: document.getElementById('openAI_Key_ak').value,
+            openAI_Message_ak: "connection test" // 단순 연결 확인용
+        };
+
+        const statusLabel = document.getElementById('status-ak');
+        const submitBtn = document.getElementById('submit-ak');
+
+        try {
+            const response = await fetch('/OpenAI/accesskey', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+
+            if (response.ok) {
+                statusLabel.className = "label label-success";
+                statusLabel.innerText = "채팅 가능";
+                submitBtn.disabled = false;
+                currentMode = 'AK'; // 현재 모드 설정
+            } else {
+                throw new Error();
+            }
+        } catch (e) {
+            statusLabel.className = "label label-danger";
+            statusLabel.innerText = "연결 실패";
+            submitBtn.disabled = true;
+        }
+    };
+
+    // --- 2. 채팅 전송 로직 ---
+    const chatInput = document.getElementById('chat-input');
+    const sendBtn = document.getElementById('send-btn');
+
+    async function sendChatMessage() {
+        const message = chatInput.value.trim();
+        if (!message) return;
+        if (!currentMode) {
+            alert("먼저 왼쪽에서 연결 체크를 완료해주세요.");
+            return;
+        }
+
+        // 유저 메시지 렌더링
+        renderMessage("나", message, "user");
+        chatInput.value = '';
+
+        // 현재 활성화된 모드의 설정값 가져오기
+        const url = currentMode === 'AK' ? '/OpenAI/accesskey' : '/OpenAI/workloadIdentity';
+        const payload = currentMode === 'AK' ? {
+            openAI_Endpoint_ak: document.getElementById('openAI_Endpoint_ak').value,
+            openAI_ModelVersion_ak: document.getElementById('openAI_ModelVersion_ak').value,
+            openAI_Deployment_ak: document.getElementById('openAI_Deployment_ak').value,
+            openAI_Key_ak: document.getElementById('openAI_Key_ak').value,
+            openAI_Message_ak: message
+        } : {
+            // Entra ID (WI)용 필드 매핑
+            openAI_Endpoint_wi: document.getElementById('openAI_embedding_Endpoint_ak').value, // 예시 ID
+            openAI_Message_wi: message
+            // ... 나머지 WI 필드들
+        };
+
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const result = await response.json();
+            renderMessage("AI 어시스턴트", result.message, "ai");
+        } catch (error) {
+            renderMessage("시스템", "오류가 발생했습니다.", "ai");
+        }
+    }
+
+    sendBtn.onclick = sendChatMessage;
+    // Chatting -----------------------------------------
+
+    
+});
+document.addEventListener('DOMContentLoaded', function() {
+    // 상태 관리 변수 (어떤 모드로 채팅할지 저장)
+    let activeChatMode = null; // 'AK' (Access Key) 또는 'WI' (Workload Identity)
+
+    const chatBox = document.getElementById('chat-box');
+    const chatInput = document.getElementById('chat-input');
+    const sendBtn = document.getElementById('send-btn');
+
+    // --- 1. 연결 체크 및 상태 변경 함수 ---
+    async function checkConnection(mode) {
+        let payload = {};
+        let url = "";
+        
+        if (mode === 'AK') {
+            url = "/OpenAI/accesskey";
+            payload = {
+                openAI_Endpoint_ak: document.getElementById('openAI_Endpoint_ak').value,
+                openAI_ModelVersion_ak: document.getElementById('openAI_ModelVersion_ak').value,
+                openAI_Deployment_ak: document.getElementById('openAI_Deployment_ak').value,
+                openAI_Key_ak: document.getElementById('openAI_Key_ak').value,
+                openAI_Message_ak: "Connection check"
+            };
+        } else {
+            url = "/OpenAI/workloadIdentity"; // 백엔드 엔드포인트 확인 필요
+            payload = {
+                openAI_Endpoint_wi: document.getElementById('openAI_Endpoint_wi').value, // 예시 ID
+                openAI_ModelVersion_wi: document.getElementById('openAI_ModelVersion_wi').value,
+                openAI_Deployment_wi: document.getElementById('openAI_Deployment_wi').value,
+                openAI_Message_wi: "Connection check"
+            };
+        }
+        
+        console.log("KMS"+mode)
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (response.ok) {
+                activeChatMode = mode; // 채팅 모드 활성화
+                updateUIStatus(mode, "success");
+                alert(`${mode === 'AK' ? 'Access Key' : 'Entra ID'} 연결에 성공했습니다. 이제 채팅이 가능합니다.`);
+            } else {
+                updateUIStatus(mode, "danger");
+                alert("연결 실패. 입력 정보를 확인해주세요.");
+            }
+        } catch (error) {
+            updateUIStatus(mode, "danger");
+            console.error("Connection error:", error);
+        }
+    }
+
+    // UI 상태 업데이트 (라벨 색상 변경 등)
+    function updateUIStatus(mode, status) {
+        const akLabel = document.getElementById('status-ak');
+        const wiLabel = document.getElementById('status-wi');
+        
+        if (mode === 'AK') {
+            akLabel.className = `label label-${status}`;
+            akLabel.innerText = status === "success" ? "채팅 가능" : "연결 실패";
+            if (status === "success") { // 다른 모드 초기화
+                wiLabel.className = "label label-default";
+                wiLabel.innerText = "연결 필요";
+            }
+        } else {
+            wiLabel.className = `label label-${status}`;
+            wiLabel.innerText = status === "success" ? "채팅 가능" : "연결 실패";
+            if (status === "success") {
+                akLabel.className = "label label-default";
+                akLabel.innerText = "연결 필요";
+            }
+        }
+    }
+
+    // --- 2. 채팅 기능 ---
+    function renderMessage(name, message, type) {
+        const isUser = type === 'user';
+        const imgPath = isUser ? "/static/dist/img/user1-128x128.jpg" : "/static/gpt.png";
+        const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        
+        // 1. 컨테이너 설정: 사용자는 오른쪽 정렬, AI는 왼쪽 정렬
+        const containerStyle = isUser 
+            ? "margin-bottom: 15px; overflow: hidden; text-align: right;" 
+            : "margin-bottom: 15px; overflow: hidden; text-align: left;";
+
+        // 2. 이미지 설정: 사용자는 오른쪽(float:right), AI는 왼쪽(float:left)
+        const imgStyle = isUser 
+            ? "width: 40px; height: 40px; border-radius: 50%; float: right;" 
+            : "width: 40px; height: 40px; border-radius: 50%; float: left;";
+
+        // 3. 메시지 박스 설정: 이미지와 겹치지 않게 여백 조정
+        const messageStyle = isUser 
+            ? "margin-right: 50px; margin-left: 0; display: block;" 
+            : "margin-left: 50px; margin-right: 0; display: block;";
+
+        // 4. 시간 표시 설정: 사용자는 이름의 왼쪽, AI는 이름의 오른쪽
+        const timeStyle = isUser ? "float: left;" : "float: right;";
+
+        const html = `
+            <div class="item" style="${containerStyle}">
+                <img src="${imgPath}" alt="user image" style="${imgStyle}">
+                <div class="message" style="${messageStyle}">
+                    <a href="#" class="name" style="display: block; font-weight: 600;">
+                        <small class="text-muted" style="${timeStyle} font-weight: 400;">
+                            <i class="fa fa-clock-o"></i> ${time}
+                        </small>
+                        ${name}
+                    </a>
+                    <div style="display: inline-block; margin-top: 25px; background: ${isUser ? '#e1f5fe' : '#f5f5f5'}; padding: 8px 12px; border-radius: 10px; text-align: left; max-width: 85%;">
+                        ${message.replace(/\n/g, '<br>')}
+                    </div>
+                </div>
+            </div>`;
+        
+        const chatBox = document.getElementById('chat-box');
+        chatBox.insertAdjacentHTML('beforeend', html);
+        
+        // 메시지 추가 후 항상 최하단으로 스크롤
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    async function sendMessage() {
+        const message = chatInput.value.trim();
+        if (!message) return;
+
+        if (!activeChatMode) {
+            alert("먼저 왼쪽 설정에서 '연결 체크'를 완료하여 채팅 가능 상태로 만들어주세요.");
+            return;
+        }
+
+        renderMessage("나", message, "user");
+        chatInput.value = '';
+
+        let url = "";
+        let payload = {};
+
+        // 활성화된 모드에 따라 데이터 수집
+        if (activeChatMode === 'AK') {
+            url = "/OpenAI/accesskey";
+            payload = {
+                openAI_Endpoint_ak: document.getElementById('openAI_Endpoint_ak').value,
+                openAI_ModelVersion_ak: document.getElementById('openAI_ModelVersion_ak').value,
+                openAI_Deployment_ak: document.getElementById('openAI_Deployment_ak').value,
+                openAI_Key_ak: document.getElementById('openAI_Key_ak').value,
+                openAI_Message_ak: message
+            };
+        } else {
+            url = "/OpenAI/workloadIdentity";
+            payload = {
+                openAI_Endpoint_wi: document.getElementById('openAI_Endpoint_wi').value,
+                openAI_ModelVersion_wi: document.getElementById('openAI_ModelVersion_wi').value,
+                openAI_Deployment_wi: document.getElementById('openAI_Deployment_wi').value,
+                openAI_Message_wi: message
+            };
+        }
+
+        try {
+            const response = await fetch(url, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+
+            const result = await response.json();
+            if (response.ok) {
+                renderMessage("AI 어시스턴트", result.message, "ai");
+            } else {
+                renderMessage("시스템", "에러 발생: " + result.message, "ai");
+            }
+        } catch (error) {
+            renderMessage("시스템", "네트워크 오류가 발생했습니다.", "ai");
+        }
+    }
+
+    // --- 3. 이벤트 바인딩 ---
+    // 연결 체크 버튼들 (HTML에 해당 ID의 버튼이 있어야 함)
+    document.getElementById('check-ak-btn').onclick = () => checkConnection('AK');
+    document.getElementById('check-wi-btn').onclick = () => checkConnection('WI');
+
+    sendBtn.onclick = sendMessage;
+    chatInput.onkeypress = (e) => { if (e.keyCode === 13) sendMessage(); };
+});
+
+</script>
+{% endblock %}

@@ -47,7 +47,6 @@ def workload_identity(data: AzureStorageAccount_INFO):
     except Exception as ex:
         print('Exception:')
         print(ex)
-        result_message += "Exception:" + "\n"
-        result_message += ex + "\n"
+        result_message += "Exception:" + str(ex)
 
     return {"message": result_message}
